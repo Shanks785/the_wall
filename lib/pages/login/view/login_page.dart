@@ -19,8 +19,24 @@ class _LoginPageState extends State<LoginPage> {
   final emailTextController = TextEditingController();
   final passwordTextController = TextEditingController();
 
+  // Sign in User
   void signIn() async {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(email: emailTextController.text, password: passwordTextController.text);
+
+    showDialog(context: context, builder: (context) => const Center(child: CircularProgressIndicator(),));
+    try {
+      var res = await FirebaseAuth.instance.signInWithEmailAndPassword(email: emailTextController.text, password: passwordTextController.text);
+      if (context.mounted) Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      Navigator.pop(context);
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No user found.')));
+      } else if (e.code == 'wrong-password') {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wrong password.')));
+      }
+    }
+
+    print(await FirebaseAuth.instance.currentUser!.getIdToken());
   }
 
   @override
